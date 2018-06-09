@@ -3,7 +3,7 @@ package ru.ttv.jchat;
 import ru.ttv.jchat.form.JChat;
 
 /**
- * Hello world!
+ * @author Timofey Teplykh
  *
  */
 public class App 
