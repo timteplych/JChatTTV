@@ -13,6 +13,9 @@ import java.awt.event.ActionListener;
 
 public class JChat extends JFrame {
     public JChat(){
+    }
+
+    public void init(){
         setTitle("JChatTTV");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setBounds(300,50,450,600);
@@ -57,7 +60,6 @@ public class JChat extends JFrame {
         add(enterPanel,BorderLayout.SOUTH);
 
         setVisible(true);
-
     }
 
     void addChatMessageInMessageArea(JTextArea chatTextArea, JTextField messageField){

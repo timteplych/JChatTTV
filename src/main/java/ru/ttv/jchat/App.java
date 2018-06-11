@@ -10,6 +10,8 @@ public class App
 {
     public static void main( String[] args )
     {
-        new JChat();
+       JChat jchat = new JChat();
+       jchat.init();
+
     }
 }
