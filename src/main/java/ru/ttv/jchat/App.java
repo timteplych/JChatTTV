@@ -1,6 +1,6 @@
 package ru.ttv.jchat;
 
-import ru.ttv.jchat.form.JChat;
+import ru.ttv.jchat.form.JChatFrame;
 
 /**
  * @author Timofey Teplykh
@@ -10,7 +10,7 @@ public class App
 {
     public static void main( String[] args )
     {
-       JChat jchat = new JChat();
+       JChatFrame jchat = new JChatFrame();
        jchat.init();
 
     }

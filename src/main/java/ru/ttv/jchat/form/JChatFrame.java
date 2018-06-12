@@ -1,7 +1,6 @@
 package ru.ttv.jchat.form;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,8 +10,8 @@ import java.awt.event.ActionListener;
  *
  */
 
-public class JChat extends JFrame {
-    public JChat(){
+public class JChatFrame extends JFrame {
+    public JChatFrame(){
     }
 
     public void init(){
@@ -24,11 +23,12 @@ public class JChat extends JFrame {
 
         //Chat text area
         final JTextArea chatTextArea = new JTextArea();
+        chatTextArea.setEditable(false);
 
         add(chatTextArea,BorderLayout.CENTER);
 
         //Panel which contains text enter elements
-        JPanel enterPanel = new JPanel();
+        final JPanel enterPanel = new JPanel();
         enterPanel.setLayout(new FlowLayout());
         //Message field
         final JTextField messageField = new JTextField();
@@ -60,6 +60,7 @@ public class JChat extends JFrame {
         add(enterPanel,BorderLayout.SOUTH);
 
         setVisible(true);
+        messageField.requestFocusInWindow();
     }
 
     void addChatMessageInMessageArea(JTextArea chatTextArea, JTextField messageField){
@@ -69,5 +70,6 @@ public class JChat extends JFrame {
         chatTextArea.append(messageField.getText());
         chatTextArea.append("\n");
         messageField.setText("");
+        messageField.requestFocusInWindow();
     }
 }
