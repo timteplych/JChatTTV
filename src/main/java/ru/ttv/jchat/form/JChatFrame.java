@@ -19,6 +19,7 @@ public class JChatFrame extends JFrame {
     private DataOutputStream outputStream;
     private Socket socket;
     private boolean authorized;
+
     //Chat text area
     final JTextArea chatTextArea = new JTextArea();
 
@@ -36,17 +37,21 @@ public class JChatFrame extends JFrame {
                     while(true){
                         String str = inputStream.readUTF();
                         if(str.startsWith("/authok")){
+                            String[] strs = str.split("\\s");
                             setAuthorized(true);
+                            setTitle("JChatTTV - "+strs[1]);
                             break;
                         }
-                        addChatMessageInMessageArea(str);
+                        //sendMessage(str);
+                        addMessageToChatTextArea(str);
                     }
                     while(true){
                         String str = inputStream.readUTF();
                         if(str.equals("/end")){
                             break;
                         }
-                        addChatMessageInMessageArea(str);
+                        //sendMessage(str);
+                        addMessageToChatTextArea(str);
                     }
                 }catch(IOException e){
                     e.printStackTrace();
@@ -74,16 +79,41 @@ public class JChatFrame extends JFrame {
 
         add(chatTextArea,BorderLayout.CENTER);
 
-        //Panel which contains text enter elements
+        //Panel containg text enter elements
         final JPanel enterPanel = new JPanel();
-        enterPanel.setLayout(new FlowLayout());
+        enterPanel.setLayout(new BorderLayout());
+        final JPanel loginPanel = new JPanel();
+        //login and pass fields
+        final JTextField loginField = new JTextField();
+        loginField.setPreferredSize(new Dimension(150,30));
+        final JTextField passwordField = new JTextField();
+        passwordField.setPreferredSize(new Dimension(150,30));
+        loginPanel.setLayout(new FlowLayout());
+        loginPanel.add(loginField);
+        loginPanel.add(passwordField);
+        //login button
+        final JButton loginBtn = new JButton("Login");
+        loginBtn.setPreferredSize(new Dimension(100,30));
+        ActionListener loginButtonActionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onAuthClick(loginField,passwordField);
+            }
+        };
+        loginBtn.addActionListener(loginButtonActionListener);
+        loginPanel.add(loginBtn);
+        enterPanel.add(loginPanel,BorderLayout.NORTH);
+
+        final JPanel sendMessagePanel = new JPanel();
+        sendMessagePanel.setLayout(new FlowLayout());
         //Message field
         final JTextField messageField = new JTextField();
 
 
         ActionListener messageFieldActionListener = new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                addChatMessageInMessageArea(messageField.getText());
+                sendMessage(messageField.getText());
+                //addMessageToChatTextArea(messageField.getText());
                 messageField.setText("");
                 messageField.requestFocusInWindow();
             }
@@ -91,7 +121,8 @@ public class JChatFrame extends JFrame {
 
         ActionListener buttonSendActionListener = new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                addChatMessageInMessageArea(messageField.getText());
+                sendMessage(messageField.getText());
+                //addMessageToChatTextArea(messageField.getText());
                 messageField.setText("");
                 messageField.requestFocusInWindow();
             }
@@ -101,12 +132,14 @@ public class JChatFrame extends JFrame {
         messageField.setPreferredSize(new Dimension(300,30));
         messageField.addActionListener(messageFieldActionListener);
 
-        enterPanel.add(messageField);
+        sendMessagePanel.add(messageField);
         //Text sending button
         final JButton sendBtn = new JButton("Send");
         sendBtn.setPreferredSize(new Dimension(100,30));
         sendBtn.addActionListener(buttonSendActionListener);
-        enterPanel.add(sendBtn);
+        sendMessagePanel.add(sendBtn);
+
+        enterPanel.add(sendMessagePanel,BorderLayout.SOUTH);
 
         add(enterPanel,BorderLayout.SOUTH);
 
@@ -114,13 +147,33 @@ public class JChatFrame extends JFrame {
         messageField.requestFocusInWindow();
     }
 
-    void addChatMessageInMessageArea(String message){
+    void sendMessage(String message){
+        if(message.equals("")){
+            return;
+        }
+        try{
+            outputStream.writeUTF(message);
+        }catch (IOException e){
+            System.out.println("Unable to send message");
+        }
+    }
+
+    private void addMessageToChatTextArea(String message){
         if(message.equals("")){
             return;
         }
         chatTextArea.append(message);
         chatTextArea.append("\n");
+    }
 
+    private void onAuthClick(JTextField loginField, JTextField passwordField){
+        try {
+            outputStream.writeUTF("/auth "+loginField.getText()+" "+passwordField.getText());
+            loginField.setText("");
+            passwordField.setText("");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void setAuthorized(boolean authorized){
