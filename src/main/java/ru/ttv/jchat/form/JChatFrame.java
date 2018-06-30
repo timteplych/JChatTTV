@@ -26,7 +26,7 @@ public class JChatFrame extends JFrame {
     public JChatFrame(){
     }
 
-    public void init(){
+    private void start(){
         try{
             socket = new Socket("localhost",8189);
             inputStream = new DataInputStream(socket.getInputStream());
@@ -69,6 +69,9 @@ public class JChatFrame extends JFrame {
         }catch (IOException e){
             e.printStackTrace();
         }
+    }
+
+    public void init(){
         setTitle("JChatTTV");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setBounds(300,50,450,600);
@@ -167,6 +170,9 @@ public class JChatFrame extends JFrame {
     }
 
     private void onAuthClick(JTextField loginField, JTextField passwordField){
+        if(socket == null || socket.isClosed()){
+            start();
+        }
         try {
             outputStream.writeUTF("/auth "+loginField.getText()+" "+passwordField.getText());
             loginField.setText("");
