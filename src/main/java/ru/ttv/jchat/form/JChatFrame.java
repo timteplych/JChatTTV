@@ -11,7 +11,6 @@ import java.net.Socket;
 
 /**
  * @author Timofey Teplykh
- *
  */
 
 public class JChatFrame extends JFrame {
@@ -25,48 +24,52 @@ public class JChatFrame extends JFrame {
     private static final String AUTH_OK_STRING = "/authok";
     private static final String END_STRING = "/end";
     private static final String AUTH_STRING = "/auth";
+    private static final String END_AUTHORIZATION_STRING = "/endauthorization";
 
     //Chat text area
     final JTextArea chatTextArea = new JTextArea();
 
-    public JChatFrame(){
+    public JChatFrame() {
     }
 
-    private void start(){
-        try{
-            socket = new Socket(SERVER_ADDRESS,SERVER_PORT);
+    private void start() {
+        try {
+            socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
             inputStream = new DataInputStream(socket.getInputStream());
             outputStream = new DataOutputStream(socket.getOutputStream());
             setAuthorized(false);
 
             //receiving messages thread
-            Thread receivingMessageThread = new Thread(()->{
-                try{
-                    while(true){
+            Thread receivingMessageThread = new Thread(() -> {
+                try {
+                    while (true) {
                         String str = inputStream.readUTF();
-                        if(str.startsWith(AUTH_OK_STRING)){
+                        if (str.startsWith(AUTH_OK_STRING)) {
                             String[] strs = str.split("\\s");
                             setAuthorized(true);
-                            setTitle(APPLICATION_CAPTION+" - "+strs[1]);
+                            setTitle(APPLICATION_CAPTION + " - " + strs[1]);
+                            break;
+                        }
+                        if (END_STRING.equals(str)) {
                             break;
                         }
                         //sendMessage(str);
                         addMessageToChatTextArea(str);
                     }
-                    while(true){
+                    while (true) {
                         String str = inputStream.readUTF();
-                        if(str.equals(END_STRING)){
+                        if (END_STRING.equals(str)) {
                             break;
                         }
                         //sendMessage(str);
                         addMessageToChatTextArea(str);
                     }
-                }catch(IOException e){
+                } catch (IOException e) {
                     e.printStackTrace();
-                }finally {
-                    try{
+                } finally {
+                    try {
                         socket.close();
-                    }catch (IOException e){
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                     setAuthorized(false);
@@ -74,21 +77,39 @@ public class JChatFrame extends JFrame {
             });
             receivingMessageThread.setDaemon(true);
             receivingMessageThread.start();
-        }catch (IOException e){
+            //*********************************************************************************
+            Thread authorizationCheckThread = new Thread(() -> {
+                long startTime = System.currentTimeMillis();
+                while (true) {
+                    long time = System.currentTimeMillis() - startTime;
+                    if ((time) >= 120000) {
+                        if(!authorized) {
+                            try {
+                                outputStream.writeUTF(END_AUTHORIZATION_STRING);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        break;
+                    }
+                }
+            });
+            authorizationCheckThread.start();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void init(){
+    public void init() {
         setTitle(APPLICATION_CAPTION);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setBounds(300,50,450,600);
+        setBounds(300, 50, 450, 600);
 
         //setting border layout to main frame
         setLayout(new BorderLayout());
 
         chatTextArea.setEditable(false);
-        add(chatTextArea,BorderLayout.CENTER);
+        add(chatTextArea, BorderLayout.CENTER);
 
         //Panel containg text enter elements
         final JPanel enterPanel = new JPanel();
@@ -96,24 +117,24 @@ public class JChatFrame extends JFrame {
         final JPanel loginPanel = new JPanel();
         //login and pass fields
         final JTextField loginField = new JTextField();
-        loginField.setPreferredSize(new Dimension(150,30));
+        loginField.setPreferredSize(new Dimension(150, 30));
         final JTextField passwordField = new JTextField();
-        passwordField.setPreferredSize(new Dimension(150,30));
+        passwordField.setPreferredSize(new Dimension(150, 30));
         loginPanel.setLayout(new FlowLayout());
         loginPanel.add(loginField);
         loginPanel.add(passwordField);
         //login button
         final JButton loginBtn = new JButton("Login");
-        loginBtn.setPreferredSize(new Dimension(100,30));
+        loginBtn.setPreferredSize(new Dimension(100, 30));
         ActionListener loginButtonActionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                onAuthClick(loginField,passwordField);
+                onAuthClick(loginField, passwordField);
             }
         };
         loginBtn.addActionListener(loginButtonActionListener);
         loginPanel.add(loginBtn);
-        enterPanel.add(loginPanel,BorderLayout.NORTH);
+        enterPanel.add(loginPanel, BorderLayout.NORTH);
 
         final JPanel sendMessagePanel = new JPanel();
         sendMessagePanel.setLayout(new FlowLayout());
@@ -140,49 +161,52 @@ public class JChatFrame extends JFrame {
         };
 
 
-        messageField.setPreferredSize(new Dimension(300,30));
+        messageField.setPreferredSize(new Dimension(300, 30));
         messageField.addActionListener(messageFieldActionListener);
 
         sendMessagePanel.add(messageField);
         //Text sending button
         final JButton sendBtn = new JButton("Send");
-        sendBtn.setPreferredSize(new Dimension(100,30));
+        sendBtn.setPreferredSize(new Dimension(100, 30));
         sendBtn.addActionListener(buttonSendActionListener);
         sendMessagePanel.add(sendBtn);
 
-        enterPanel.add(sendMessagePanel,BorderLayout.SOUTH);
+        enterPanel.add(sendMessagePanel, BorderLayout.SOUTH);
 
-        add(enterPanel,BorderLayout.SOUTH);
+        add(enterPanel, BorderLayout.SOUTH);
 
         setVisible(true);
         messageField.requestFocusInWindow();
+        if (socket == null || socket.isClosed()) {
+            start();
+        }
     }
 
-    void sendMessage(String message){
-        if("".equals(message)){
+    void sendMessage(String message) {
+        if ("".equals(message)) {
             return;
         }
-        try{
+        try {
             outputStream.writeUTF(message);
-        }catch (IOException e){
+        } catch (IOException e) {
             System.out.println("Unable to send message");
         }
     }
 
-    private void addMessageToChatTextArea(String message){
-        if("".equals(message)){
+    private void addMessageToChatTextArea(String message) {
+        if ("".equals(message)) {
             return;
         }
         chatTextArea.append(message);
         chatTextArea.append("\n");
     }
 
-    private void onAuthClick(JTextField loginField, JTextField passwordField){
-        if(socket == null || socket.isClosed()){
+    private void onAuthClick(JTextField loginField, JTextField passwordField) {
+        if (socket == null || socket.isClosed()) {
             start();
         }
         try {
-            outputStream.writeUTF(AUTH_STRING+" "+loginField.getText()+" "+passwordField.getText());
+            outputStream.writeUTF(AUTH_STRING + " " + loginField.getText() + " " + passwordField.getText());
             loginField.setText("");
             passwordField.setText("");
         } catch (IOException e) {
@@ -190,7 +214,7 @@ public class JChatFrame extends JFrame {
         }
     }
 
-    private void setAuthorized(boolean authorized){
+    private void setAuthorized(boolean authorized) {
         this.authorized = authorized;
     }
 }
