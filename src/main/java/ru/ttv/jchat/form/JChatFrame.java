@@ -159,7 +159,7 @@ public class JChatFrame extends JFrame {
     }
 
     void sendMessage(String message){
-        if(message.equals("")){
+        if("".equals(message)){
             return;
         }
         try{
@@ -170,7 +170,7 @@ public class JChatFrame extends JFrame {
     }
 
     private void addMessageToChatTextArea(String message){
-        if(message.equals("")){
+        if("".equals(message)){
             return;
         }
         chatTextArea.append(message);
